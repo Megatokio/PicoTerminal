@@ -1,0 +1,11 @@
+build-*
+*.txt.user
+*.autosave
+*xxx
+*(copy)*
+*.ALT
+*.ods
+*.ods#
+.cache
+rsrc
+use.txt
