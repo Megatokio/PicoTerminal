@@ -102,7 +102,7 @@ static void read_settings()
 	settings.baud_rate_idx	  = baudrate_idx;
 	settings.vga_mode_idx	  = vga_idx;
 	settings.keyboard_idx	  = kbd_idx;
-	settings.enable_mouse	  = true;
+	settings.enable_mouse	  = false;
 	settings.auto_wrap		  = ANSITERM_DEFAULT_AUTO_WRAP;
 	settings.application_mode = ANSITERM_DEFAULT_APPLICATION_MODE;
 	settings.utf8_mode		  = ANSITERM_DEFAULT_UTF8_MODE;
@@ -119,61 +119,20 @@ static void write_settings() // TODO
 	settings_in_flash = settings; // TODO
 }
 
-void print_heap_free(AnsiTerm* terminal, bool r)
+void print_heap_free(AnsiTerm& terminal, bool r)
 {
 	// print list of all free chunks on the heap:
 
 	uint32 sz = heap_free();
 	if (sz == 0) return;
 
-	terminal->printf("%s: %u bytes\n", r ? "+fragment" : "heap free", sz);
+	terminal.printf("%s: %u bytes\n", r ? "+fragment" : "heap free", sz);
 
 	void* volatile p = malloc(sz);
 	assert(p);
 
 	print_heap_free(terminal, 1);
 	free(p);
-}
-
-void print_core0_scratch_y_usage(AnsiTerm* terminal)
-{
-	const uint32 xa = core0_scratch_y_start();
-	const uint32 xe = core0_scratch_y_end();
-
-	if (xa != xe) terminal->printf("0x%08x to 0x%08x: core0 scratch_y\n", xa, xe);
-	else terminal->printf("core0 scratch_y not used\n");
-	terminal->printf("0x%08x to 0x%08x: core0 stack\n", core0_stack_bottom(), core0_stack_top());
-}
-
-void print_core1_scratch_x_usage(AnsiTerm* terminal)
-{
-	const uint32 xa = core1_scratch_x_start();
-	const uint32 xe = core1_scratch_x_end();
-
-	if (xa != xe) terminal->printf("0x%08x to 0x%08x: core1 scratch_x\n", xa, xe);
-	else terminal->printf("core1 scratch_x not used\n");
-	terminal->printf("0x%08x to 0x%08x: core1 stack\n", core1_stack_bottom(), core1_stack_top());
-}
-
-void print_flash_usage(AnsiTerm* terminal)
-{
-	const size_t fa = flash_binary_start();
-	const size_t fe = flash_binary_end();
-
-	terminal->printf("0x%08x to 0x%08x: flash, used %u, free %u\n", fa, fe, flash_used(), flash_free());
-}
-
-void print_load(AnsiTerm* terminal, uint core)
-{
-	uint min, max, avg;
-	LoadSensor::getLoad(core, min, avg, max);
-	min = (min + 50000) / 100000;
-	max = (max + 50000) / 100000;
-	avg = (avg + 50000) / 100000;
-
-	terminal->printf(
-		"load core %i: %i.%i, %i.%i, %i.%iMHz (min,avg,max)\n", core, min / 10, min % 10, avg / 10, avg % 10, max / 10,
-		max % 10);
 }
 
 void print_system_info(AnsiTerm& terminal)
@@ -183,20 +142,33 @@ void print_system_info(AnsiTerm& terminal)
 
 	terminal.printf("running on core %u\n", get_core_num());
 	terminal.printf("total heap size = %u\n", heap_size());
-	print_heap_free(&terminal, 0);
+	print_heap_free(terminal, 0);
 	terminal.printf("stack free: %u bytes\n", stack_free());
-	print_core1_scratch_x_usage(&terminal);
-	print_flash_usage(&terminal);
+
+	const uint32 xa = core1_scratch_x_start();
+	const uint32 xe = core1_scratch_x_end();
+	if (xa != xe) terminal.printf("0x%08x to 0x%08x: core1 scratch_x\n", xa, xe);
+	else terminal.printf("core1 scratch_x not used\n");
+	terminal.printf("0x%08x to 0x%08x: core1 stack\n", core1_stack_bottom(), core1_stack_top());
+
+	const size_t fa = flash_binary_start();
+	const size_t fe = flash_binary_end();
+
+	terminal.printf("0x%08x to 0x%08x: flash, used %u, free %u\n", fa, fe, flash_used(), flash_free());
 
 	terminal.printf("system clock = %u MHz\n", clock_get_hz(clk_sys) / 1000000);
 	terminal.puts(USB::keyboardPresent() ? "keyboard detected\n" : "***no keyboard!\n");
 	terminal.puts(USB::mousePresent() ? "mouse detected\n" : "no mouse\n");
 
-	print_load(&terminal, 0);
-	print_load(&terminal, 1);
-	//sm_print_missed_lines();
-	//print_stack_free();
-	//print_heap_free();
+	uint min, max, avg;
+	LoadSensor::getLoad(1 /*core*/, min, avg, max);
+	min = (min + 50000) / 100000;
+	max = (max + 50000) / 100000;
+	avg = (avg + 50000) / 100000;
+
+	terminal.printf(
+		"load core 1: %i.%i, %i.%i, %i.%iMHz (min,avg,max)\n", min / 10, min % 10, avg / 10, avg % 10, max / 10,
+		max % 10);
 
 	terminal.newline_mode = newline;
 }
