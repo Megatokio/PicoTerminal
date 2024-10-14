@@ -3,18 +3,18 @@
 
 *A wannabe-ANSI compliant VGA text terminal for the RP2040.*
 
-This project creates a ANSI text terminal connected to a serial port of the RP2040.  
-The video output is via VGA and the keyboard&mouse inputs are via USB.
+This project is for an ANSI text terminal provided at a serial port of the RP2040.  
+The video output is via VGA and the keyboard & mouse inputs are via USB.
 
-Various options can be set via cmake variables (or -D on the command line).  
-The description of your board is read from a `boards` header file.  
+Various options can be set via cmake variables.  
+The description of your board is read from a `boards` header file as this is SDK standard.  
 
 For your first own board take a look at [[https://github.com/Megatokio/kilipili/wiki/Your-first-own-VGA-Board]].
 
 
 ### Ansi Terminal
-The kilipili Graphics engine contains a class which provides a wannabe-ANSI-compliant text terminal. 
-Here a short excerpt from the featore list in `kilipili/Graphics/ANSITerm`:  
+*lib kilipili* contains a class which provides a wannabe-ANSI-compliant text terminal. 
+Here a short excerpt from the feature list in `kilipili/Graphics/ANSITerm`:  
 
 - color (xterm compatible)
 - mouse pointer support
@@ -22,9 +22,6 @@ Here a short excerpt from the featore list in `kilipili/Graphics/ANSITerm`:
 - bold, inverse, italic, underlined, double width and double height 
 - Latin-1 character set, one Graphics character set
 - optional utf-8 encoding
-- US and German keyboard (you are welcomed to add your nationality!)
-
-It supports only one graphics character set and the character sets can only be swapped as a whole.
 
 ### Serial port options
 The serial port is set from PICO_DEFAULT_UART in the boards header file.  
@@ -34,8 +31,8 @@ Characters are transmitted as 7 bit ASCII or 8 bit Latin-1 characters, or utf-8 
 Other character sets are possible but need your work. Your contributions are welcome.
 
 ### VGA options
-VGA color pins can be any number from 1 to 16, b&w, grey, rgb color or rgbi color.  
-This is configurable in the boards.h file.  
+VGA color pins can be any number from 1 to 16, b&w, grey, RGB color or RGBI color.  
+This is configurable in the boards header file.  
 CLK and DEN signals are supported but this feature has not been tested and may be broken. 
 Feedback is welcome.
 
@@ -44,7 +41,8 @@ The text terminal uses true color for the display.
 The amount of 'true' in color depends on the number of pins you spent for the VGA output.  
 The screen size can be configured from 40x20 characters (320x240 pixels) to 128x64 characters (1024x768 pixels).  
 The screen size can be changed at runtime in the configuration screen.  
-The high resolutions (i think 800x600 and above) only display properly when built in Release mode.
+The high resolutions (i think 800x600 and above) only display properly when built in Release mode.  
+Mouse pointer in 1024x768 mode is not possible because the display of just that mode is tight to the cycle. 
 
 ### Keyboard & Mouse options
 The keyboard and a mouse can be connected via USB. You need a USB-on-the-go cable/adapter for that. If you also use a mouse you also need a hub.  
@@ -55,7 +53,7 @@ This is configurable with cmake setting USB_DEFAULT_KEYTABLE.
 
 ### Audio options
 Audio can be none, a buzzer, PWM or I2S. The terminal just plays a beep for char(7).  
-This is configurable in the boars.h file.
+This is configurable in the boards header file.
 
 ### Terminal settings, setup screen
 You can press ctrl-alt-delete (or backspace) to enter the configurartion screen. This allows you to change the following options:
@@ -91,8 +89,8 @@ the defaults can be set with cmake variables:
 
 ### The boards.h file
 For the Raspberry VGA demonstration board you can use the vgaboard.h as-is.  
-For other boards or your own board you must put together your own board.h file.  
-This can be placed in the SDK's boards/ directory or, in order not to modify your SDK, in the kilipili/boards/ subfolder of this project.  
+For other boards or your own board you must provide your own board header file.  
+This can be placed in the SDK's `boards/` directory or, in order not to modify your SDK, in the `kilipili/boards/` subfolder of this project.  
 Don't forget to add it to the `.git/modules/kilipili/info/exclude` text file. **B-)**
 
 The following #defines should be present in this file. Replace pin number etc. for your board.  
