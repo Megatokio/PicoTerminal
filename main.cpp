@@ -372,6 +372,11 @@ void run_ansiterm(AnsiTerm& terminal)
 	}
 }
 
+void sysclockChanged(uint32 /*new_clock*/) noexcept
+{
+	uart_set_baudrate(uart_default, baud_rates[settings.baud_rate_idx]);
+}
+
 int main()
 {
 	stdio_init_all();
@@ -381,18 +386,14 @@ int main()
 
 	VideoController& videocontroller = VideoController::getRef();
 	Audio::AudioController::getRef().startAudio(true);
-	Error error;
+	Error error = NO_ERROR;
 
 	for (;;)
 	{
 		try
 		{
-			error = NO_ERROR;
-			if (USB::ctrl_alt_del_detected) error = "ctrl-alt-del pressed";
-			USB::ctrl_alt_del_detected = false;
-
 			USB::setHidKeyTranslationTable(*keyboards[settings.keyboard_idx]);
-			uart_set_baudrate(PICO_DEFAULT_UART_INSTANCE, baud_rates[settings.baud_rate_idx]);
+			uart_set_baudrate(uart_default, baud_rates[settings.baud_rate_idx]);
 
 			constexpr ColorMode colormode = colormode_a1w8_rgb;
 			const VgaMode&		vgamode	  = error ? vga_mode_320x240_60 : *vga_modes[settings.vga_mode_idx];
@@ -407,6 +408,10 @@ int main()
 			AnsiTerm terminal {pixmap, colors.get()};
 			if (error) run_osm(terminal, error);
 			else run_ansiterm(terminal);
+
+			error = NO_ERROR;
+			if (USB::ctrl_alt_del_detected) error = "ctrl-alt-del pressed";
+			USB::ctrl_alt_del_detected = false;
 		}
 		catch (std::exception& e)
 		{
