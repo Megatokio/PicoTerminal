@@ -1,6 +1,12 @@
 
 cmake_minimum_required(VERSION 3.13)
-project(AnsiTextTerminal CXX C ASM)
+
+if(NOT (UNIT_TEST OR MAKE_TOOLS))
+	include(pico_sdk_import.cmake)
+	include(pico_extras_import.cmake)
+endif()
+
+project(PicoTerminal CXX C ASM)
 
 set(CMAKE_CXX_STANDARD 20)
 set(PICO_CXX_ENABLE_EXCEPTIONS 1)
@@ -13,15 +19,12 @@ MESSAGE (STATUS "CPU = ${CMAKE_SYSTEM_PROCESSOR}") # x86_64, cortex-m0plus
 set(CMAKE_CXX_FLAGS_DEBUG   "${CMAKE_CXX_FLAGS_DEBUG}   -DDEBUG")
 set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -DRELEASE -DNDEBUG")
 
-if(CMAKE_SYSTEM_NAME STREQUAL "PICO")
-	set(UNIT_TEST OFF)	
-else()	
-	set(UNIT_TEST ON)	
-endif()	
-
 
 ####################################################################
 # OPTIONS:
+
+option(UNIT_TEST  "compile the desktop unit tests (desktop, not pico!)" OFF)
+option(MAKE_TOOLS "compile the desktop tools (desktop, not pico!)" OFF)
 
 option(ANSITERM_DEFAULT_UTF8_MODE        "Use UTF-8 on serial line" OFF)
 option(ANSITERM_DEFAULT_APPLICATION_MODE "Keypad in application mode" OFF)
@@ -41,22 +44,20 @@ set_property(CACHE VIDEO_SCANLINE_BUFFER_SIZE  PROPERTY STRINGS "2" "4" "8" "16"
 set_property(CACHE PICO_DEFAULT_UART_BAUD_RATE PROPERTY STRINGS 2400 4800 9600 19200 38400 57600 115200)
 
 
-
 ##########################################################################
 
-if(CMAKE_SYSTEM_NAME STREQUAL "PICO")
-	include(pico_sdk_import.cmake)
-	include(pico_extras_import.cmake)
-	pico_sdk_init()
+if(UNIT_TEST)
+	add_subdirectory(kilipili/unit_test)
 endif()
-
-add_subdirectory(kilipili)
+if(MAKE_TOOLS)
+	add_subdirectory(kilipili/tools)
+endif()
+if(NOT (UNIT_TEST OR MAKE_TOOLS))
+	pico_sdk_init()
+	add_subdirectory(kilipili)
 	
-
 ##########################################################################
 # Pico VGA Ansi Text Terminal                                                  
-
-if(CMAKE_SYSTEM_NAME STREQUAL "PICO")
 
 	add_compile_definitions( 
 		ON=1 OFF=0
@@ -75,35 +76,35 @@ if(CMAKE_SYSTEM_NAME STREQUAL "PICO")
 		ANSITERM_DEFAULT_LOG_UNHANDLED=${ANSITERM_DEFAULT_LOG_UNHANDLED}
 		)
 	
-	add_executable(PicoTerm
-	main.cpp
-	kilipili/utilities/malloc.cpp
-)
+		add_executable(PicoTerm
+		main.cpp
+		kilipili/utilities/malloc.cpp
+	)
  
-# Pull in libraries: (this also adds the header search paths)
-target_link_libraries(PicoTerm PUBLIC
-	kilipili
-	pico_stdlib
-	pico_multicore
-	#hardware_pwm
-	#hardware_pio
-	#hardware_dma
-	#hardware_irq
-	#hardware_spi
-	#hardware_interp
-	#hardware_rtc
-	#hardware_i2c
-	#hardware_adc
-	#hardware_flash
-)
-
-if(CMAKE_SYSTEM_NAME STREQUAL "PICO")
-	pico_enable_stdio_usb(PicoTerm ${PICO_STDIO_USB})
-	pico_enable_stdio_uart(PicoTerm ${PICO_STDIO_UART})
-endif()
-
-# create map/bin/hex/uf2 file etc.
-pico_add_extra_outputs(PicoTerm)
+	# Pull in libraries: (this also adds the header search paths)
+	target_link_libraries(PicoTerm PUBLIC
+		kilipili
+		pico_stdlib
+		pico_multicore
+		#hardware_pwm
+		#hardware_pio
+		#hardware_dma
+		#hardware_irq
+		#hardware_spi
+		#hardware_interp
+		#hardware_rtc
+		#hardware_i2c
+		#hardware_adc
+		#hardware_flash
+	)
+	
+	if(CMAKE_SYSTEM_NAME STREQUAL "PICO")
+		pico_enable_stdio_usb(PicoTerm ${PICO_STDIO_USB})
+		pico_enable_stdio_uart(PicoTerm ${PICO_STDIO_UART})
+	endif()
+	
+	# create map/bin/hex/uf2 file etc.
+	pico_add_extra_outputs(PicoTerm)
 
 endif()
 
