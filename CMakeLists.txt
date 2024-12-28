@@ -23,8 +23,7 @@ set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -DRELEASE -DNDEBUG")
 ####################################################################
 # OPTIONS:
 
-option(UNIT_TEST  "compile the desktop unit tests (desktop, not pico!)" OFF)
-option(MAKE_TOOLS "compile the desktop tools (desktop, not pico!)" OFF)
+option(MAKE_TOOLS "compile unit test and desktop tools (desktop, not pico!)" OFF)
 
 option(ANSITERM_DEFAULT_UTF8_MODE        "Use UTF-8 on serial line" OFF)
 option(ANSITERM_DEFAULT_APPLICATION_MODE "Keypad in application mode" OFF)
@@ -37,7 +36,7 @@ option(ANSITERM_DEFAULT_LOG_UNHANDLED    "Print unhandled and broken control cod
 
 set(ANSITERM_DEFAULT_SCREENSIZE  "640x480" CACHE STRING "Default screen size")
 set(VIDEO_SCANLINE_BUFFER_SIZE   "4"       CACHE STRING "Buffer for prepared scanlines")
-set(PICO_DEFAULT_UART_BAUD_RATE  "9600"    CACHE STRING "Default uart baud rate")
+set(PICO_DEFAULT_UART_BAUD_RATE  "115200"  CACHE STRING "Default uart baud rate")
 	
 set_property(CACHE ANSITERM_DEFAULT_SCREENSIZE PROPERTY STRINGS 320x240 400x300 512x384 640x480 800x600 1024x768)
 set_property(CACHE VIDEO_SCANLINE_BUFFER_SIZE  PROPERTY STRINGS "2" "4" "8" "16")
@@ -46,13 +45,10 @@ set_property(CACHE PICO_DEFAULT_UART_BAUD_RATE PROPERTY STRINGS 2400 4800 9600 1
 
 ##########################################################################
 
-if(UNIT_TEST)
-	add_subdirectory(kilipili/unit_test)
-endif()
 if(MAKE_TOOLS)
-	add_subdirectory(kilipili/tools)
+	add_subdirectory(kilipili/desktop_tools)
 endif()
-if(NOT (UNIT_TEST OR MAKE_TOOLS))
+if(NOT MAKE_TOOLS)
 	pico_sdk_init()
 	add_subdirectory(kilipili)
 	

@@ -157,19 +157,19 @@ void print_system_info(AnsiTerm& terminal)
 	terminal.printf("0x%08x to 0x%08x: flash, used %u, free %u\n", fa, fe, flash_used(), flash_free());
 
 	terminal.printf("system clock = %u MHz\n", clock_get_hz(clk_sys) / 1000000);
-	terminal.puts(USB::keyboardPresent() ? "keyboard detected\n" : "***no keyboard!\n");
-	terminal.puts(USB::mousePresent() ? "mouse detected\n" : "no mouse\n");
-
 	uint min, max, avg;
 	LoadSensor::getLoad(1 /*core*/, min, avg, max);
 	min = (min + 50000) / 100000;
 	max = (max + 50000) / 100000;
 	avg = (avg + 50000) / 100000;
-
 	terminal.printf(
-		"load core 1: %i.%i, %i.%i, %i.%iMHz (min,avg,max)\n", min / 10, min % 10, avg / 10, avg % 10, max / 10,
-		max % 10);
-
+		"load core 1: %u.%u, %u.%u, %u.%uMHz (min,avg,max)\n", //
+		min / 10, min % 10, avg / 10, avg % 10, max / 10, max % 10);
+	terminal.printf(
+		"serial port: %u 8N1%s%s\n", baud_rates[settings.baud_rate_idx], //
+		terminal.utf8_mode ? ", utf-8" : "", terminal.c1_codes_8bit ? ", 8bit c1 codes" : "");
+	terminal.puts(USB::keyboardPresent() ? "keyboard detected\n" : "***no keyboard!\n");
+	terminal.puts(USB::mousePresent() ? "mouse detected\n" : "no mouse\n");
 	terminal.newline_mode = newline;
 }
 
@@ -302,9 +302,9 @@ again:
 			case 15: s.local_echo = !s.local_echo; continue;
 			case 16: s.sgr_cumulative = !s.sgr_cumulative; continue;
 			case 17: s.log_unhandled = !s.log_unhandled; continue;
-			case 18: //save to flash
+			case 18: //save to flash: TODO
 				settings = s;
-				kio::Audio::beep(440, 0.5f, 5000);
+				kio::Audio::beep(440, 0.3f, 1000);
 				write_settings();
 				continue;
 			case 19: //exit
@@ -330,7 +330,8 @@ void run_ansiterm(AnsiTerm& terminal)
 
 	terminal.display->identify();
 	print_system_info(terminal);
-	terminal.puts("READY\n\n");
+	terminal.printf("press ctrl-alt-del to enter setup\n\r");
+	terminal.puts("READY\n\n\r");
 
 	bool xoff = false;
 
@@ -355,6 +356,9 @@ int main()
 	USB::initUSBHost();
 	LoadSensor::start();
 	read_settings();
+
+	// usb needs some time to mount the keyboard, if present
+	for (CC wait_end = now() + 2 * 1000 * 1000; now() < wait_end && !USB::keyboardPresent();) run_sm();
 
 	VideoController& videocontroller = VideoController::getRef();
 	Audio::AudioController::getRef().startAudio(true);

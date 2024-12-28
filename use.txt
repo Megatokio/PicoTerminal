@@ -6,18 +6,52 @@ minicom -D /dev/ttyUSB0
 ### if cmake breaks: ###
 
 
-// Pico project build folder:
+Pico: build PicoTerminal:
+------------------------
 
-cd build/build-...
+cd build-Debug      # or whatever
 rm -rf *
-export PICO_SDK_PATH=../../pico-sdk
-cmake -DCMAKE_BUILD_TYPE=Debug -DPICO_BOARD=vgaboard -DCMAKE_TOOLCHAIN_FILE=../../pico-sdk/cmake/preload/toolchains/pico_arm_cortex_m0plus_gcc.cmake ..
+cmake -DPICO_SDK_PATH=../../pico-sdk -DCMAKE_BUILD_TYPE=Debug -DPICO_BOARD=vgaboard ..
+make
 
-
-// Desktop Unit Test project build folder:
-
-cd build/build-...
+cd build-Release   # or whatever
 rm -rf *
-cmake -DCMAKE_BUILD_TYPE=Debug -DUNIT_TEST=ON ..
+cmake -DPICO_SDK_PATH=../../pico-sdk -DCMAKE_BUILD_TYPE=Release -DPICO_BOARD=vgaboard ..
+make
+
+NOTE:
+	if your board is known to the sdk, then replace `vgaboard` with your board.
+	if you made a custom board.h file for your custom board, then:
+		put your board file in `kilipili/boards/`,
+		run cmake with `-DPICO_BOARD=vgaboard` and
+		run cmake again with `-DPICO_BOARD=my_board`.
+ 	   	And add your board file to the private git ignore list in `.git/info/exclude`. (create if it does not exist)
+ 		You can also run only once with `-DPICO_BOARD_HEADER_DIRS=$PWD/../kilipili/boards`.
+
+NOTE:
+	it may be neccessary to point cmake to the toolchain file:
+		-DCMAKE_TOOLCHAIN_FILE=../../pico-sdk/cmake/preload/toolchains/pico_arm_cortex_m0plus_gcc.cmake
+	replace toolchain with the one for your board:
+	pico_arm_clang_arm.cmake
+	pico_arm_cortex_m0plus_clang.cmake
+	pico_arm_cortex_m0plus_gcc.cmake
+	pico_arm_cortex_m23_gcc.cmake
+	pico_arm_cortex_m33_clang.cmake
+	pico_arm_cortex_m33_gcc.cmake
+	pico_riscv_gcc.cmake
+	pico_riscv_gcc_zcb_zcmp.cmake
+
+
+Desktop: build Unit Test (and some others of no interest to PicoTerminal):
+-------------------------------------------------------------------------
+
+cd build-Tools-Debug  # or whatever
+rm -rf *
+cmake -DCMAKE_BUILD_TYPE=Debug -DMAKE_TOOLS=ON ..
+make
+
+
+
+
 
 
