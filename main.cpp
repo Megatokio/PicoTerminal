@@ -11,6 +11,7 @@
 #include "Video/FrameBuffer.h"
 #include "Video/MousePointer.h"
 #include "Video/VideoController.h"
+#include "common/cstrings.h"
 #include "utilities/LoadSensor.h"
 #include "utilities/utilities.h"
 #include <memory>
@@ -151,7 +152,7 @@ void print_system_info(AnsiTerm& terminal)
 	else terminal.printf("core1 scratch_x not used\n");
 	terminal.printf("0x%08x to 0x%08x: core1 stack\n", core1_stack_bottom(), core1_stack_top());
 
-	const size_t fa = flash_binary_start();
+	const size_t fa = flash_start();
 	const size_t fe = flash_binary_end();
 
 	terminal.printf("0x%08x to 0x%08x: flash, used %u, free %u\n", fa, fe, flash_used(), flash_free());
