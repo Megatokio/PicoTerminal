@@ -3,6 +3,7 @@
 // https://opensource.org/licenses/BSD-2-Clause
 
 #include "AudioController.h"
+#include "Dispatcher.h"
 #include "Graphics/AnsiTerm.h"
 #include "Graphics/Pixmap_wAttr.h"
 #include "USBHost/USBKeyboard.h"
@@ -11,7 +12,6 @@
 #include "Video/MousePointer.h"
 #include "Video/VideoController.h"
 #include "utilities/LoadSensor.h"
-#include "utilities/sm_utilities.h"
 #include "utilities/utilities.h"
 #include <memory>
 #include <pico/printf.h>
@@ -173,13 +173,6 @@ void print_system_info(AnsiTerm& terminal)
 	terminal.newline_mode = newline;
 }
 
-static void run_sm()
-{
-	sm_blink_onboard_led();
-	USB::pollUSB();
-	sm_throttle();
-}
-
 static cstr inked(bool a, bool b)
 {
 	return usingstr("[%s%s%s] ", a == b ? "\x1b[32m" : "\x1b[31m", a ? "ON" : "OFF", "\x1b[39m");
@@ -245,7 +238,7 @@ again:
 		int c = nochar;
 		while (c == nochar)
 		{
-			run_sm();
+			Dispatcher::run(1000);
 			c = terminal.getc();
 			if (USB::ctrl_alt_del_detected) return;
 		}
@@ -286,8 +279,8 @@ again:
 				terminal.puts("\x1b[5H"); // locate cursor to (5,1)
 				terminal.puts("\x1b[J");  // erase to end of screen
 				print_system_info(terminal);
-				while (terminal.getc() == nochar) { run_sm(); } // wait for key
-				while (terminal.getc() != nochar) {}			// eat rest of multi-char keys
+				while (terminal.getc() == nochar) { Dispatcher::run(1000); } // wait for key
+				while (terminal.getc() != nochar) {}						 // eat rest of multi-char keys
 				goto again;
 			}
 			case 6: s.vga_mode_idx = (s.vga_mode_idx + 1u) % NELEM(vga_modes); continue;
@@ -341,7 +334,7 @@ void run_ansiterm(AnsiTerm& terminal)
 		if (c == XON || c == XOFF) xoff = c == XOFF;
 		else if (c != PICO_ERROR_TIMEOUT) terminal.putc(char(c));
 		if (!xoff && (c = terminal.getc()) != nochar) putchar_raw(c);
-		else run_sm();
+		else Dispatcher::run(1000);
 	}
 }
 
@@ -356,9 +349,11 @@ int main()
 	USB::initUSBHost();
 	LoadSensor::start();
 	read_settings();
+	Dispatcher::addHandler(blinkOnboardLed);
+	Dispatcher::addHandler(USB::pollUSB);
 
 	// usb needs some time to mount the keyboard, if present
-	for (CC wait_end = now() + 2 * 1000 * 1000; now() < wait_end && !USB::keyboardPresent();) run_sm();
+	for (CC wait_end = now() + 2 * 1000 * 1000; now() < wait_end && !USB::keyboardPresent();) Dispatcher::run(1000);
 
 	VideoController& videocontroller = VideoController::getRef();
 	Audio::AudioController::getRef().startAudio(true);
