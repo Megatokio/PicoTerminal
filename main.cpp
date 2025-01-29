@@ -3,6 +3,7 @@
 // https://opensource.org/licenses/BSD-2-Clause
 
 #include "AudioController.h"
+#include "Devices/Preferences.h"
 #include "Dispatcher.h"
 #include "Graphics/AnsiTerm.h"
 #include "Graphics/Pixmap_wAttr.h"
@@ -11,6 +12,7 @@
 #include "Video/FrameBuffer.h"
 #include "Video/MousePointer.h"
 #include "Video/VideoController.h"
+#include "common/cdefs.h"
 #include "common/cstrings.h"
 #include "utilities/LoadSensor.h"
 #include "utilities/utilities.h"
@@ -75,7 +77,6 @@ struct Settings
 	bool  log_unhandled	   = 0xff;
 };
 
-static Settings settings_in_flash; // TODO: in flash
 static Settings settings;
 
 static constexpr const VgaMode* vga_modes[] = {&vga_mode_320x240_60, &vga_mode_400x300_60, &vga_mode_512x384_60,
@@ -88,8 +89,14 @@ static constexpr const HidKeyTable* keyboards[] = {&USB::key_table_us, &USB::key
 
 static void read_settings()
 {
-	settings = settings_in_flash;
-	if (settings.magic == Settings::MAGIC) return;
+	settings = Preferences().read(0, settings);
+	if (settings.magic == Settings::MAGIC)
+	{
+		if (settings.baud_rate_idx < NELEM(baud_rates) && //
+			settings.vga_mode_idx < NELEM(vga_modes) &&	  //
+			settings.keyboard_idx < NELEM(keyboards))
+			return;
+	}
 
 	uint8 kbd_idx = NELEM(keyboards);
 	while (kbd_idx && keyboards[--kbd_idx] != &USB::USB_DEFAULT_KEYTABLE) {}
@@ -104,20 +111,20 @@ static void read_settings()
 	settings.vga_mode_idx	  = vga_idx;
 	settings.keyboard_idx	  = kbd_idx;
 	settings.enable_mouse	  = false;
-	settings.auto_wrap		  = ANSITERM_DEFAULT_AUTO_WRAP;
-	settings.application_mode = ANSITERM_DEFAULT_APPLICATION_MODE;
-	settings.utf8_mode		  = ANSITERM_DEFAULT_UTF8_MODE;
-	settings.c1_codes_8bit	  = ANSITERM_DEFAULT_C1_CODES_8BIT;
-	settings.newline_mode	  = ANSITERM_DEFAULT_NEWLINE_MODE;
-	settings.local_echo		  = ANSITERM_DEFAULT_LOCAL_ECHO;
-	settings.sgr_cumulative	  = ANSITERM_DEFAULT_SGR_CUMULATIVE;
-	settings.log_unhandled	  = ANSITERM_DEFAULT_LOG_UNHANDLED;
+	settings.auto_wrap		  = false;
+	settings.application_mode = false;
+	settings.utf8_mode		  = false;
+	settings.c1_codes_8bit	  = false;
+	settings.newline_mode	  = false;
+	settings.local_echo		  = false;
+	settings.sgr_cumulative	  = false;
+	settings.log_unhandled	  = false;
 }
 
-static void write_settings() // TODO
+static void write_settings()
 {
-	settings.magic	  = Settings::MAGIC;
-	settings_in_flash = settings; // TODO
+	settings.magic = Settings::MAGIC;
+	Preferences().write(0, settings);
 }
 
 void print_heap_free(AnsiTerm& terminal, bool r)
@@ -298,9 +305,9 @@ again:
 			case 17: s.log_unhandled = !s.log_unhandled; continue;
 			case 18: //save to flash: TODO
 				settings = s;
-				kio::Audio::beep(440, 0.3f, 1000);
 				write_settings();
-				continue;
+				msg = "settings saved to flash";
+				goto again;
 			case 19: //exit
 				settings = s;
 				return;

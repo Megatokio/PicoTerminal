@@ -70,22 +70,14 @@ You can press ctrl-alt-delete (or backspace) to enter the configurartion screen.
 - enable local echo
 - set SGR mode to replace or accumulate 
 - enable display of unhandled/broken codes
-- save configuration to flash **TODO**
+- save configuration to flash
 - show some system info
 
-the defaults can be set with cmake variables:
+these defaults can also be set with cmake variables:
 
 - USB_DEFAULT_KEYTABLE
 - PICO_DEFAULT_UART_BAUD_RATE
-- ANSITERM_DEFAULT_UTF8_MODE
-- ANSITERM_DEFAULT_SCREENSIZE
-- ANSITERM_DEFAULT_AUTO_WRAP
-- ANSITERM_DEFAULT_APPLICATION_MODE
-- ANSITERM_DEFAULT_C1_CODES_8BIT
-- ANSITERM_DEFAULT_NEWLINE_MODE
-- ANSITERM_DEFAULT_LOCAL_ECHO
-- ANSITERM_DEFAULT_SGR_CUMULATIVE
-- ANSITERM_DEFAULT_LOG_UNHANDLED
+- VIDEO_DEFAULT_SCREENSIZE
 
 ### The boards.h file
 For the Raspberry VGA demonstration board you can use the vgaboard.h as-is.  
