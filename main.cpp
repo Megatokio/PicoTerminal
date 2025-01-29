@@ -369,14 +369,12 @@ int main()
 			constexpr ColorMode colormode = colormode_a1w8_rgb;
 			const VgaMode&		vgamode	  = error ? vga_mode_320x240_60 : *vga_modes[settings.vga_mode_idx];
 
-			CanvasPtr				 pixmap = new Pixmap<colormode>(vgamode.width, vgamode.height, attrheight_12px);
-			std::unique_ptr<Color[]> colors {newColorMap(colormode)};
-
-			videocontroller.addPlane(new FrameBuffer<colormode>(pixmap, colors.get()));
+			CanvasPtr pixmap = new Pixmap<colormode>(vgamode.width, vgamode.height, attrheight_12px);
+			videocontroller.addPlane(new FrameBuffer<colormode>(pixmap));
 			if (!error && settings.enable_mouse) videocontroller.addPlane(new MousePointer<Sprite<Shape>>);
 			videocontroller.startVideo(vgamode, 0, VIDEO_SCANLINE_BUFFER_SIZE);
 
-			AnsiTerm terminal {pixmap, colors.get()};
+			AnsiTerm terminal {pixmap};
 			if (error) run_osm(terminal, error);
 			else run_ansiterm(terminal);
 
