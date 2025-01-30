@@ -41,18 +41,17 @@ The text terminal uses true color for the display.
 The amount of 'true' in color depends on the number of pins you spent for the VGA output.  
 The screen size can be configured from 40x20 characters (320x240 pixels) to 128x64 characters (1024x768 pixels).  
 The screen size can be changed at runtime in the configuration screen.  
-The high resolutions (i think 800x600 and above) only display properly when built in Release mode.  
-Mouse pointer in 1024x768 mode is not possible because the display of just that mode is tight to the cycle. 
+The high resolutions (i think 1024x768) only display properly when built in Release mode.  
 
 ### Keyboard & Mouse options
 The keyboard and a mouse can be connected via USB. You need a USB-on-the-go cable/adapter for that. If you also use a mouse you also need a hub.  
 There are currently two keyboard maps available: US english and German. You are welcome to add your localization.  
 The character set is Latin-1, which is the first page of Unicode and suits most western European languages.  
 You are welcome to provide the glyphs (graphics) of other character sets together with a matching keyboard map.  
-This is configurable with cmake setting USB_DEFAULT_KEYTABLE.  
+This is configurable with cmake setting USB_DEFAULT_KEYTABLE or in the configuration screen.  
 
 ### Audio options
-Audio can be none, a buzzer, PWM or I2S. The terminal just plays a beep for char(7).  
+Audio can be none, a buzzer, PWM, I2S or SigmaDelta. The terminal just plays a beep for char(7).  
 This is configurable in the boards header file.
 
 ### Terminal settings, setup screen
