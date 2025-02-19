@@ -14,6 +14,7 @@
 #include "Video/VideoController.h"
 #include "common/cdefs.h"
 #include "common/cstrings.h"
+#include "malloc.h"
 #include "utilities/LoadSensor.h"
 #include "utilities/utilities.h"
 #include <memory>
@@ -131,7 +132,7 @@ void print_heap_free(AnsiTerm& terminal, bool r)
 {
 	// print list of all free chunks on the heap:
 
-	uint32 sz = heap_free();
+	uint32 sz = heap_largest_free_block();
 	if (sz == 0) return;
 
 	terminal.printf("%s: %u bytes\n", r ? "+fragment" : "heap free", sz);
@@ -149,7 +150,7 @@ void print_system_info(AnsiTerm& terminal)
 	terminal.newline_mode = true;
 
 	terminal.printf("running on core %u\n", get_core_num());
-	terminal.printf("total heap size = %u\n", heap_size());
+	terminal.printf("total heap size = %u\n", heap_total_size());
 	print_heap_free(terminal, 0);
 	terminal.printf("stack free: %u bytes\n", stack_free());
 
