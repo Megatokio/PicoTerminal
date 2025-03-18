@@ -52,6 +52,7 @@
 using namespace kio;
 using namespace kio::Graphics;
 using namespace kio::Video;
+using namespace kio::Audio;
 using HidKeyTable = kio::USB::HidKeyTable;
 
 static constexpr char XON	 = 17;
@@ -148,37 +149,42 @@ void print_system_info(AnsiTerm& terminal)
 	bool newline		  = terminal.newline_mode;
 	terminal.newline_mode = true;
 
-	terminal.printf("running on core %u\n", get_core_num());
-	terminal.printf("total heap size = %u\n", heap_total_size());
-	print_heap_free(terminal, 0);
-	terminal.printf("stack free: %u bytes\n", stack_free());
-
 	const uint32 xa = core1_scratch_x_start();
 	const uint32 xe = core1_scratch_x_end();
-	if (xa != xe) terminal.printf("0x%08x to 0x%08x: core1 scratch_x\n", xa, xe);
-	else terminal.printf("core1 scratch_x not used\n");
-	terminal.printf("0x%08x to 0x%08x: core1 stack\n", core1_stack_bottom(), core1_stack_top());
-
-	const size_t fa = flash_start();
-	const size_t fe = flash_binary_end();
-
-	terminal.printf("0x%08x to 0x%08x: flash, used %u, free %u\n", fa, fe, flash_used(), flash_free());
 
 	terminal.printf("system clock = %u MHz\n", clock_get_hz(clk_sys) / 1000000);
-	uint min, max, avg;
-	LoadSensor::getLoad(1 /*core*/, min, avg, max);
-	min = (min + 50000) / 100000;
-	max = (max + 50000) / 100000;
-	avg = (avg + 50000) / 100000;
-	terminal.printf(
-		"load core 1: %u.%u, %u.%u, %u.%uMHz (min,avg,max)\n", //
-		min / 10, min % 10, avg / 10, avg % 10, max / 10, max % 10);
+	terminal.printf("heap size    = %u bytes\n", heap_total_size());
+	terminal.printf("heap free    = %u bytes\n", heap_largest_free_block());
+	terminal.printf("scratch_x    = %u bytes\n", xe - xa);
+	terminal.printf("program size = %u bytes\n", flash_used());
+
 	terminal.printf(
 		"serial port: %u 8N1%s%s\n", baud_rates[settings.baud_rate_idx], //
 		terminal.utf8_mode ? ", utf-8" : "", terminal.c1_codes_8bit ? ", 8bit c1 codes" : "");
 	terminal.puts(USB::keyboardPresent() ? "keyboard detected\n" : "***no keyboard!\n");
 	terminal.puts(USB::mousePresent() ? "mouse detected\n" : "no mouse\n");
 	terminal.newline_mode = newline;
+}
+
+void print_system_colors(AnsiTerm& terminal)
+{
+	terminal.printf("VGA colors:\n");
+
+	for (int i = 0; i < 16; i++) { terminal.printf("\x1b[48;5;%im ", i); }
+	terminal.printf("\x1b[49m\n"); // reset background color
+
+	for (int r = 0; r < 6; r++)
+	{
+		for (int g = 0; g < 6; g++)
+		{
+			for (int b = 0; b < 6; b++) { terminal.printf("\x1b[48;5;%im ", 16 + r * 36 + g * 6 + b); }
+			terminal.printf("\x1b[49m "); // reset background color
+		}
+		terminal.printf("\x1b[49m\n"); // reset background color
+	}
+
+	for (int i = 16 + 6 * 6 * 6; i < 256; i++) { terminal.printf("\x1b[48;5;%im ", i); }
+	terminal.printf("\x1b[49m\n"); // reset background color
 }
 
 static cstr inked(bool a, bool b)
@@ -330,6 +336,7 @@ void run_ansiterm(AnsiTerm& terminal)
 	terminal.reset(true);
 
 	terminal.display->identify();
+	print_system_colors(terminal);
 	print_system_info(terminal);
 	terminal.printf("press ctrl-alt-del to enter setup\n\r");
 	terminal.puts("READY\n\n\r");
@@ -363,7 +370,7 @@ int main()
 	// usb needs some time to mount the keyboard, if present
 	for (CC wait_end = now() + 2 * 1000 * 1000; now() < wait_end && !USB::keyboardPresent();) Dispatcher::run(1000);
 
-	Audio::AudioController::getRef().startAudio(true);
+	AudioController::startAudio(true);
 	Error error = NO_ERROR;
 
 	for (;;)
