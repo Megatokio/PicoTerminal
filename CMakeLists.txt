@@ -55,7 +55,7 @@ if(NOT MAKE_TOOLS)
 	
 		add_executable(PicoTerm
 		main.cpp
-		kilipili/utilities/malloc.cpp
+		kilipili/common/malloc.cpp
 		)
  
 	target_link_libraries(PicoTerm PUBLIC

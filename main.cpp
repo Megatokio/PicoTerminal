@@ -2,21 +2,10 @@
 // BSD-2-Clause license
 // https://opensource.org/licenses/BSD-2-Clause
 
-#include "AudioController.h"
-#include "Devices/Preferences.h"
-#include "Dispatcher.h"
-#include "Graphics/AnsiTerm.h"
-#include "Graphics/Pixmap_wAttr.h"
-#include "USBHost/USBKeyboard.h"
-#include "USBHost/hid_handler.h"
-#include "Video/FrameBuffer.h"
-#include "Video/MousePointer.h"
-#include "Video/VideoController.h"
-#include "common/cdefs.h"
-#include "common/cstrings.h"
-#include "malloc.h"
-#include "utilities/LoadSensor.h"
-#include "utilities/utilities.h"
+#include <AnsiTerm.h>
+#include <kilipili.h>
+#include <malloc.h>
+#include <memory.h>
 #include <pico/printf.h>
 #include <pico/stdio.h>
 
@@ -370,7 +359,7 @@ int main()
 	// usb needs some time to mount the keyboard, if present
 	for (CC wait_end = now() + 2 * 1000 * 1000; now() < wait_end && !USB::keyboardPresent();) Dispatcher::run(1000);
 
-	AudioController::startAudio(true);
+	startAudio(true);
 	Error error = NO_ERROR;
 
 	for (;;)
@@ -384,9 +373,9 @@ int main()
 			const VgaMode&		vgamode	  = error ? vga_mode_320x240_60 : *vga_modes[settings.vga_mode_idx];
 
 			CanvasPtr pixmap = new Pixmap<colormode>(vgamode.width, vgamode.height, attrheight_12px);
-			VideoController::addPlane(new FrameBuffer<colormode>(pixmap));
-			if (!error && settings.enable_mouse) VideoController::addPlane(new MousePointer<Sprite<Shape>>);
-			VideoController::startVideo(vgamode, 0, VIDEO_SCANLINE_BUFFER_SIZE);
+			addVideoPlane(new FrameBuffer<colormode>(pixmap));
+			if (!error && settings.enable_mouse) addVideoPlane(new MousePointer<Sprite<Shape>>);
+			startVideo(vgamode, 0, VIDEO_SCANLINE_BUFFER_SIZE);
 
 			AnsiTerm terminal {pixmap};
 			if (error) run_osm(terminal, error);
@@ -409,7 +398,7 @@ int main()
 			error = UNKNOWN_ERROR;
 		}
 
-		VideoController::stopVideo();
+		stopVideo();
 	}
 }
 
