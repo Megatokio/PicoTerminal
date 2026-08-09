@@ -13,8 +13,7 @@ For your first own board take a look at [[https://github.com/Megatokio/kilipili/
 
 
 ### Ansi Terminal
-*lib kilipili* contains a class which provides a wannabe-ANSI-compliant text terminal. 
-Here a short excerpt from the feature list in `kilipili/Graphics/ANSITerm`:  
+Here a short excerpt from the feature list in file `ANSITerm.txt`:  
 
 - color (xterm compatible)
 - mouse pointer support

@@ -2,7 +2,7 @@
 // BSD-2-Clause license
 // https://opensource.org/licenses/BSD-2-Clause
 
-#include <AnsiTerm.h>
+#include "AnsiTerm.h"
 #include <kilipili.h>
 #include <malloc.h>
 #include <memory.h>
@@ -38,11 +38,11 @@
 #endif
 
 
-using namespace kio;
-using namespace kio::Graphics;
-using namespace kio::Video;
-using namespace kio::Audio;
-using HidKeyTable = kio::USB::HidKeyTable;
+using namespace kilipili;
+using namespace kilipili::Graphics;
+using namespace kilipili::Video;
+using namespace kilipili::Audio;
+using HidKeyTable = kilipili::USB::HidKeyTable;
 
 static constexpr char XON	 = 17;
 static constexpr char XOFF	 = 19;

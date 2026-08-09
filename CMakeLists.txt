@@ -1,7 +1,9 @@
+###########################################
+# CMakeLists.txt
 
 cmake_minimum_required(VERSION 3.13)
 
-if(NOT (UNIT_TEST OR MAKE_TOOLS))
+if(NOT MAKE_TOOLS)
 	include(pico_sdk_import.cmake)
 	include(pico_extras_import.cmake)
 endif()
@@ -15,9 +17,6 @@ set(PICO_CXX_ENABLE_EXCEPTIONS 1)
 
 MESSAGE (STATUS "System = ${CMAKE_SYSTEM_NAME}")   # Linux, PICO
 MESSAGE (STATUS "CPU = ${CMAKE_SYSTEM_PROCESSOR}") # x86_64, cortex-m0plus
-
-set(CMAKE_CXX_FLAGS_DEBUG   "${CMAKE_CXX_FLAGS_DEBUG}   -DDEBUG")
-set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -DRELEASE -DNDEBUG")
 
 
 ####################################################################
@@ -38,9 +37,13 @@ set_property(CACHE PICO_DEFAULT_UART_BAUD_RATE PROPERTY STRINGS 2400 4800 9600 1
 
 if(MAKE_TOOLS)
 	add_subdirectory(kilipili/desktop_tools)
+	add_subdirectory(unit_test)		
 endif()
-
+ 
 if(NOT MAKE_TOOLS)
+	set(CMAKE_CXX_FLAGS_DEBUG   "${CMAKE_CXX_FLAGS_DEBUG}   -DDEBUG")
+	set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -DRELEASE -DNDEBUG")
+
 	pico_sdk_init()
 	add_subdirectory(kilipili)
 	
@@ -56,6 +59,8 @@ if(NOT MAKE_TOOLS)
 		add_executable(PicoTerm
 		main.cpp
 		kilipili/common/malloc.cpp
+		AnsiTerm.cpp 
+		AnsiTerm.h
 		)
  
 	target_link_libraries(PicoTerm PUBLIC
